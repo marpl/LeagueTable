@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Eredivisie League Table</title>
+        <script type="text/javascript" src="MatchResults.json"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+        <link type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet">
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+
+        <table id="leagueTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Team</th>
+                    <th>Points</th>
+                    <th>G+</th>
+                    <th>G-</th>
+                </tr>
+            </thead>
+            <tbody id="rankingTable">
+            </tbody>
+        </table>
+
+        <div id="popup-box">
+            <span id="popup-closer">x</span>
+            <figure id="first-team">
+                <img src="team-logos/1510.svg">
+                <figcaption>Dortmund</figcaption>
+            </figure>
+            <div id="for-vs">vs</div>
+            <figure id="last-team">
+                <img src="team-logos/1516.svg">
+                <figcaption>Liverpool</figcaption>
+            </figure>
+            <time id="match-time" datetime="2014-12-12 12:30">2014/12/12 - 12:30</time>
+        </div>
+
+        <script type="text/javascript">
+            //////
+            function Teams() {
+                var teamsArr = [];
+
+                //by ID
+                this.getTeam = function (id) {
+                    return teamsArr[id] !== undefined ? teamsArr[id] : null;
+                };
+
+                this.addTeam = function (team) {
+                    teamsArr[team.getId()] = team;
+                };
+
+                this.getSorted = function () {
+                    var tmp = teamsArr.slice(0);
+
+                    tmp.sort(function (a, b) {
+                        if (a.getPoints() < b.getPoints()) {
+                            return 1;
+                        }
+
+                        if (a.getPoints() > b.getPoints()) {
+                            return -1;
+                        }
+
+                        // 1st advantage to the team with BETTER ATTACK (most goals scored)
+                        if (a.getScoredGoals() < b.getScoredGoals()) {
+                            return 1;
+                        }
+
+                        if (a.getScoredGoals() > b.getScoredGoals()) {
+                            return -1;
+                        }
+                        // 2st advantage to the team with BETTER DEFENCE (less goals conceded)
+                        if (a.getConcededGoals() < b.getConcededGoals()) {
+                            return -1;
+                        }
+
+                        if (a.getConcededGoals() > b.getConcededGoals()) {
+                            return 1;
+                        }
+
+                        return 0;
+                    });
+
+                    return tmp;
+                };
+            }
+
+            ////functions for DATA
+            function Team(data) {
+                var id = data.id;
+                var name = data.displayName;
+                var date = "";
+                var time = "";
+                var points = 0;
+                var scoredGoals = 0;
+                var concededGoals = 0;
+                var nextMatch = null;
+
+                this.getDate = function () {
+                    return date;
+                };
+                this.getTime = function () {
+                    return time;
+                };
+                this.getId = function () {
+                    return id;
+                };
+
+                this.getName = function () {
+                    return name;
+                };
+
+                this.getPoints = function () {
+                    return points;
+                };
+
+                this.win = function () {
+                    points += 3;
+                };
+
+                this.draw = function () {
+                    points++;
+                };
+
+                this.getScoredGoals = function () {
+                    return scoredGoals;
+                };
+
+                this.addScoredGoals = function (goalCount) {
+                    scoredGoals += goalCount;
+                };
+
+                this.getConcededGoals = function () {
+                    return concededGoals;
+                };
+
+                this.addConcededGoals = function (goalCount) {
+                    concededGoals += goalCount;
+                };
+
+                this.hasNextMatch = function () {
+                    return nextMatch !== null;
+                };
+
+                this.getNextMatch = function () {
+                    return nextMatch;
+                };
+
+                this.setNextMatch = function (match) {
+                    nextMatch = match;
+                };
+            }
+
+            var months = [
+                'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            function Match(homeTeam, awayTeam, date) {
+                this.getHomeTeam = function () {
+                    return homeTeam;
+                };
+                this.getAwayTeam = function () {
+                    return awayTeam;
+                };
+
+                this.getDate = function () {
+                    var dateObj = new Date(date);
+                    var minutes = dateObj.getMinutes();
+                    var hours = dateObj.getHours();
+                    var day = dateObj.getDate();
+                    var monthName = months[dateObj.getMonth()];
+                    var year = dateObj.getFullYear();
+
+                    return day + ' ' + monthName + ' ' + year + ' - ' + hours + ':' + minutes;
+                };
+            }
+
+            var teams = new Teams();
+
+            $.getJSON("MatchResults.json", function (data) {
+                for (var key in data.rounds) {
+                    //through ROUNDS
+                    var value = data.rounds[key];
+
+                    for (var inlineKey in value) {
+                        /// in ROUND
+                        var actualValue = value[inlineKey];
+
+                        var team1Data = actualValue.homeSelectionEdition;
+                        var team2Data = actualValue.awaySelectionEdition;
+
+                        var team1 = resolveTeam(team1Data);
+                        var team2 = resolveTeam(team2Data);
+                        var team1Score = actualValue.homeGoalsRegularPlayTime;
+                        var team2Score = actualValue.awayGoalsRegularPlayTime;
+
+                        var matchDate = actualValue.localDateTime;
+                        var date = matchDate.substring(0, matchDate.indexOf('T'));
+                        var time = matchDate.split("T").pop();
+                        var Ntime = time.substring(0, time.indexOf('+'));
+
+                        //future match
+
+                        if (team1Score === '' || team2Score === '') {
+                            var match = new Match(team1, team2, actualValue.localDateTime);
+
+                            if (!team1.hasNextMatch()) {
+                                team1.setNextMatch(match);
+                            }
+
+                            if (!team2.hasNextMatch()) {
+                                team2.setNextMatch(match);
+                            }
+
+                            continue;
+                        }
+
+                        //start calculations
+                        team1.addScoredGoals(team1Score);
+                        team1.addConcededGoals(team2Score);
+                        team2.addScoredGoals(team2Score);
+                        team2.addConcededGoals(team1Score);
+
+                        if (team1Score > team2Score) {
+                            team1.win();
+                        } else if (team1Score < team2Score) {
+                            team2.win();
+                        } else {
+                            team1.draw();
+                            team2.draw();
+                        }
+                    }
+                }
+
+                var rankTable = document.getElementById('rankingTable');
+                var sortedData = teams.getSorted();
+                var index = 0;
+
+                for (var key in sortedData) {
+                    index++;
+                    var value = sortedData[key];
+
+                    var row = '<tr>' +
+                            '<td>' + index + "." + '</td>' +
+                            '<td class="appear-popup" data-id="' + value.getId() + '">' + value.getName() + '</td>' +
+                            '<td>' + value.getPoints() + '</td>' +
+                            '<td>' + value.getScoredGoals() + '</td>' +
+                            '<td>' + value.getConcededGoals() + '</td>' +
+                            '</tr>';
+
+                    rankTable.innerHTML += row;
+                }
+            });
+
+            function resolveTeam(data) {
+                var team = teams.getTeam(data.id);
+
+                if (team === null) {
+                    team = new Team(data);
+                    teams.addTeam(team);
+                }
+
+                return team;
+            }
+
+            function appearPopup(first, last, time, that) {
+                var popup = $('#popup-box');
+
+                popup.removeClass('top-arr');
+                popup.find('#first-team > img').attr('src', 'team-logos/' + first.id + '.svg');
+                popup.find('#first-team > figcaption').html(first.name);
+                popup.find('#last-team > img').attr('src', 'team-logos/' + last.id + '.svg');
+                popup.find('#last-team > figcaption').html(last.name);
+                popup.find('#match-time').html(time);
+
+                var popupH = popup.outerHeight();
+                var thatTop = that.offset().top;
+                var thatLeft = that.offset().left;
+                var thatOffsetTop = thatTop <= popupH ? thatTop + 34 : thatTop - popupH - 14;
+                popup.css({
+                    'top': thatOffsetTop,
+                    'left': thatLeft + 10
+                });
+
+                thatTop <= popupH ? popup.addClass('active top-arr') : popup.addClass('active');
+            }
+
+            $('#rankingTable').on('click', '.appear-popup', function () {
+                var teamId = $(this).data('id');
+                var team = teams.getTeam(teamId);
+
+                if (!team.hasNextMatch()) {
+                    // No next match is left
+                    return;
+                }
+
+                var match = team.getNextMatch();
+
+                var team1 = match.getHomeTeam();
+                var team2 = match.getAwayTeam();
+
+                appearPopup({
+                    "id": team1.getId(),
+                    "name": team1.getName()
+                }, {
+                    "id": team2.getId(),
+                    "name": team2.getName()
+                }, match.getDate(), $(this));
+            });
+
+            $('body').on('click', '#popup-closer', function () {
+                $('#popup-box').removeClass('active');
+            });
+
+            $(document).ready(function () {
+                $("tr").mouseover(function () {
+                    $(this).closest("tr").siblings().removeClass("highlighted");
+                    $(this).toggleClass("highlighted");
+                });
+            });
+
+            // $("tr").click(function () {
+            //     $( "#target" ).click();
+            // });
+        </script>
+    </body>
+</html>

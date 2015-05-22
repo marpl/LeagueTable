@@ -1,0 +1,159 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 30 Νοε 2014, 10:13:42 μμ
+    Author     : Maria
+*/
+
+body{
+    background-color: #0189FE;
+}
+
+
+table#leagueTable {
+
+    padding: 0px;
+    background-color: #f1f1c1;
+    border-spacing: 5px;
+    border-radius:4px;
+    -moz-border-radius:4px !important;
+    -webkit-border-radius:4px !important;
+    border-collapse:separate;
+}
+table#leagueTable th{
+
+    background-color: #fbf8e9;
+    border-top: none;
+    text-align: center;
+    font-size: 18px;
+    font-family: Monospace;
+    font-weight: bold;
+}
+
+table#leagueTable tr {
+    text-align: center;
+    font-size: 15px;
+    font-family: Monospace;
+}
+
+table#leagueTable td {
+    text-align: center;
+    font-size: 15px;
+    font-family: Monospace;
+}
+
+table#leagueTable td:first-child {
+
+}
+
+table#leagueTable tr:nth-child(odd){
+    background-color:#FE6D01; 
+}
+table#leagueTable tr:nth-child(even){
+    background-color:#fff; 
+}
+
+
+/*//////////////////////////////////////////////////////////////*/
+
+.highlighted {
+    color: #261F1D;
+    background-color: #E5C37E;
+}
+
+table#leagueTable tr:hover {
+    font-weight: bold;
+}
+
+/*//////////////////////////////////////////////////////////////*/
+
+table#footballClubs tr {
+    
+}
+
+/* popup box */
+.appear-popup{cursor:default}
+
+#popup-box{
+    display:none;
+    width:320px;
+    padding:24px 20px 14px 20px;
+    border:2px solid #ccc;
+    background-color:#fff;
+    border-radius:6px;
+    position:absolute;
+    top:100px;
+    left:50px
+}
+#popup-box::after{
+    content:' ';
+    width:0;
+    height:0;
+    border:26px solid transparent;
+    border-top:15px solid #ccc;
+    position:absolute;
+    top:100%;
+    left:30px
+}
+#popup-box.top-arr::after{
+    border-top:26px solid transparent;
+    border-bottom:15px solid #ccc;
+    top: auto;
+    bottom:100%;
+}
+#popup-closer{
+    color:#ccc;
+    font-family:arial;
+    font-size:17px;
+    font-weight:bold;
+    display:block;
+    cursor:pointer;
+    position:absolute;
+    top:2px;
+    right:8px
+}
+#popup-box > time{
+    width:100%;
+    float:left;
+    margin-top:10px;
+    text-align:center;
+    text-decoration: underline;
+    font-style: italic;
+}
+#popup-box > figure{
+    display:block;
+    width:43%;
+    float:left;
+    margin:0
+}
+#for-vs{
+    width:14%;
+    float:left;
+    margin-top:20px;
+    text-align:center
+}
+#popup-box > figure > img{
+    display:block;
+    max-width:40%;
+    max-height:110px;
+    float:left;
+    margin:0
+}
+#popup-box > figure > figcaption{
+    display:block;
+    width:50%;
+    float:right;
+    word-wrap:break-word;
+    text-align:center;
+    font-size: 13px;
+    font-weight: bold;
+    margin:0;
+    margin-top:18px
+}
+#popup-box > figure:nth-child(4){float:right}
+#popup-box > figure:nth-child(4) > img{float:right}
+#popup-box > figure:nth-child(4) > figcaption{float:left}
+#popup-box.active{display:block}
